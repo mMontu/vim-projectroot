@@ -13,6 +13,11 @@ if !exists('g:rootmarkers')
   let g:rootmarkers = ['.projectroot', '.git', '.hg', '.svn', '.bzr', '_darcs', 'build.xml']
 endif
 
+if !exists('g:projectroot_link')
+  let g:projectroot_link = '.projectrootlink'
+endif
+
+
 " ProjectRootGet([file]): get the project root (if any) {{{1
 fun! ProjectRootGet(...)
   if exists('s:projectrootskip')
@@ -27,13 +32,17 @@ fun! ProjectRootGet(...)
       return b:projectroot
     endif
   endif
-  for marker in g:rootmarkers
+  for marker in (g:rootmarkers + [g:projectroot_link])
     let pivot=fullfile
     while 1
       let prev=pivot
       let pivot=fnamemodify(pivot, ':h')
       if filereadable(pivot.'/'.marker) || isdirectory(pivot.'/'.marker)
-        return pivot
+        if marker==g:projectroot_link 
+          return fnamemodify(glob(pivot.'/'.readfile(glob(pivot.'/'.marker), '', 1)[0]), ":p")
+        else
+          return pivot
+        endif
       endif
       if pivot==prev
         break
